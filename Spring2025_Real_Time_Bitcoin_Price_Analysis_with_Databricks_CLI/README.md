@@ -70,6 +70,7 @@ The entire flow is orchestrated through shell scripts and the Databricks CLI —
         chmod +x scripts/*.sh
 
 📒 Register Notebook as a Databricks Job (One-Time Setup)
+    
     To run the notebook automatically from the shell script, you need to create a Databricks job once:
 
     Open your Databricks workspace.
@@ -108,17 +109,20 @@ The entire flow is orchestrated through shell scripts and the Databricks CLI —
 
 🚦 How to Run
 🔹 1. Fetch Real-Time Bitcoin Price
+        
         python scripts/fetch_bitcoin_price.py
 
         For automated collection every 15 minutes:
         for i in {1..500}; do python scripts/fetch_bitcoin_price.py; sleep 900; done
 🔹 2. Upload to Databricks File System (DBFS)
+        
         bash scripts/upload_to_dbfs.sh
 
         This stores the data in:
 
         dbfs:/bitcoin/bitcoin_price.json
 🔹 3. Run Databricks Notebook for Forecasting
+        
         Open your Databricks workspace
 
         Attach the cluster created via CLI or manually
@@ -194,6 +198,7 @@ The entire flow is orchestrated through shell scripts and the Databricks CLI —
 
 
 🕐 Automate Pipeline on Schedule
+    
     To run the pipeline every X minutes:
 
     **Windows:**
@@ -206,6 +211,7 @@ The entire flow is orchestrated through shell scripts and the Databricks CLI —
 
 
 📽️ Demo Video (Coming Soon)
+    
     A 5-minute screen recording showing:
 
     CLI cluster creation
@@ -219,6 +225,7 @@ The entire flow is orchestrated through shell scripts and the Databricks CLI —
     Full automation via shell script
 
 🙋‍♂️ Author
-    Ritik
+
+    Ritik Pratap Singh
     Data Science Graduate Student, UMD
     GitHub: ritik294
