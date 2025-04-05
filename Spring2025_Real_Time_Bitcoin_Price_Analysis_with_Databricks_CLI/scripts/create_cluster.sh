@@ -1,31 +1,15 @@
 #!/bin/bash
 
-databricks clusters create --json '{
-  "num_workers": 0,
-  "cluster_name": "bitcoin-analysis-cluster",
-  "spark_version": "15.4.x-scala2.12",
-  "spark_conf": {
-    "spark.master": "local[*, 4]",
-    "spark.databricks.cluster.profile": "singleNode"
-  },
-  "azure_attributes": {
-    "first_on_demand": 1,
-    "availability": "SPOT_WITH_FALLBACK_AZURE",
-    "spot_bid_max_price": -1
-  },
-  "node_type_id": "Standard_DS3_v2",
-  "driver_node_type_id": "Standard_DS3_v2",
-  "ssh_public_keys": [],
-  "custom_tags": {
-    "ResourceClass": "SingleNode"
-  },
-  "spark_env_vars": {
-    "PYSPARK_PYTHON": "/databricks/python3/bin/python3"
-  },
-  "autotermination_minutes": 10,
-  "enable_elastic_disk": true,
-  "init_scripts": [],
-  "single_user_name": "ritik294@umd.edu",
-  "data_security_mode": "LEGACY_SINGLE_USER_STANDARD",
-  "runtime_engine": "PHOTON"
-}'
+echo "🚀 Creating Databricks cluster from config..."
+
+# Create cluster and capture response
+response=$(databricks clusters create --json-file config/cluster_config.json)
+
+# Extract cluster_id using jq
+cluster_id=$(echo "$response" | jq -r '.cluster_id')
+
+# Save the cluster_id for later use
+echo "$cluster_id" > config/cluster_id.txt
+
+echo "✅ Cluster created successfully!"
+echo "Cluster ID: $cluster_id"
