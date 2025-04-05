@@ -1,30 +1,53 @@
 #!/bin/bash
+set -e
 
-echo "🚀 Starting Full Automation Pipeline"
+# Config
+JOB_ID=${1:-515902180597777}
+MAX_WAIT_SECONDS=300
+SLACK_WEBHOOK_URL="https://hooks.slack.com/services/YOUR/WEBHOOK"
 
-# 1. Create cluster and store cluster ID
+echo "🕒 $(date +'%Y-%m-%d %H:%M:%S') - 🚀 Starting Pipeline"
+
+# 1. Create cluster
 echo "🔧 Creating cluster..."
-bash scripts/create_cluster.sh
+cluster_output=$(bash scripts/create_cluster.sh)
+cluster_id=$(echo "$cluster_output" | grep -o 'cluster-[0-9a-zA-Z-]*' | head -1)
+echo "$cluster_id" > config/cluster_id.txt
 
-# 2. Wait ~5 minutes for cluster to spin up
-echo "⏳ Waiting for cluster to become active (300 seconds)..."
-sleep 300
+# 2. Wait for cluster
+echo "⏳ Waiting for cluster (max $MAX_WAIT_SECONDS seconds)..."
+for i in $(seq 1 $((MAX_WAIT_SECONDS/10))); do
+    status=$(databricks clusters get --cluster-id "$cluster_id" | jq -r '.state')
+    [[ "$status" == "RUNNING" ]] && break
+    sleep 10
+done
 
-# 3. Fetch current Bitcoin price
-echo "📈 Fetching Bitcoin price from API..."
-python scripts/fetch_bitcoin_price.py
+if [[ "$status" != "RUNNING" ]]; then
+    echo "❌ Cluster $cluster_id failed to start (Status: $status)"
+    exit 1
+fi
 
-# 4. Upload the updated JSON to DBFS
-echo "📤 Uploading bitcoin_price.json to DBFS..."
-bash scripts/upload_to_dbfs.sh
+# 3-5. Execute pipeline
+echo "📈 Fetching Bitcoin price..."
+python scripts/fetch_bitcoin_price.py || exit 1
 
-# 5. Trigger Databricks notebook via job_id
-echo "📊 Running forecast notebook..."
-databricks jobs run-now --job-id 515902180597777
+echo "📤 Uploading to DBFS..."
+bash scripts/upload_to_dbfs.sh || exit 1
 
-# Optional 6. Terminate the cluster
-cluster_id=$(cat config/cluster_id.txt)
-echo "🧹 Terminating cluster $cluster_id to save costs..."
+echo "📊 Running notebook (Job ID: $JOB_ID)..."
+run_id=$(databricks jobs run-now --job-id "$JOB_ID" | jq -r '.run_id')
+
+workspace_url="https://adb-166759757699610.10.azuredatabricks.net"
+echo "🔗 View job: $workspace_url/#job/$JOB_ID/run/$run_id"
+
+# 6. Cleanup
+echo "🧹 Terminating cluster $cluster_id..."
 databricks clusters delete --cluster-id "$cluster_id"
 
-echo "✅ Pipeline completed successfully!"
+# Notification
+echo "✅ $(date +'%Y-%m-%d %H:%M:%S') - Pipeline completed successfully!"
+if [[ -n "$SLACK_WEBHOOK_URL" ]]; then
+  curl -X POST -H 'Content-type: application/json' \
+    --data "{\"text\":\"✅ BTC Pipeline succeeded at $(date)\"}" \
+    "$SLACK_WEBHOOK_URL" 2>/dev/null || true
+fi
