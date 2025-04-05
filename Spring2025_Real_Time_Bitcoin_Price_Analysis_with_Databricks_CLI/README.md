@@ -184,10 +184,12 @@ The entire flow is orchestrated through shell scripts and the Databricks CLI —
     Databricks DBFS Docs : https://docs.databricks.com/dbfs/index.html
 
 🤝 Contributing
+    
     Fork the repo, make changes in a feature branch, and submit a PR.
     PRs should include a meaningful description, passing scripts, and updated docs if needed.
 
 📜 License
+    
     This project is licensed under the MIT License. See the LICENSE file for details.
 
 
