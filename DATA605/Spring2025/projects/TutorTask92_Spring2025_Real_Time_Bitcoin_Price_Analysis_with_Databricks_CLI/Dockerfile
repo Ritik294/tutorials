@@ -38,22 +38,33 @@ RUN pip3 install \
 
 RUN mkdir /install
 
-# Install the project packages.
-ADD requirements.txt /install
-RUN pip3 install -r /install/requirements.txt
-
 # Install Jupyter extensions.
-ADD install_jupyter_extensions.sh /install
-RUN /install/install_jupyter_extensions.sh
+# ADD install_jupyter_extensions.sh /install
+# RUN /install/install_jupyter_extensions.sh
+COPY install_jupyter_extensions.sh /install/install_jupyter_extensions.sh
+RUN sed -i 's/\r$//' /install/install_jupyter_extensions.sh \
+ && chmod +x      /install/install_jupyter_extensions.sh \
+ && /install/install_jupyter_extensions.sh
 
 # Config.
-ADD etc_sudoers /install/
-COPY etc_sudoers /etc/sudoers
-COPY bashrc /root/.bashrc
+# ADD etc_sudoers /install/
+# COPY etc_sudoers /etc/sudoers
+# COPY bashrc /root/.bashrc
+COPY etc_sudoers /install/etc_sudoers
+RUN cp /install/etc_sudoers /etc/sudoers
+
+COPY bashrc /install/bashrc
+RUN sed -i 's/\r$//' /install/bashrc \
+ && cp /install/bashrc /root/.bashrc
 
 # Report package versions.
-ADD version.sh /install/
-RUN /install/version.sh 2>&1 | tee version.log
+# ADD version.sh /install/
+# RUN /install/version.sh 2>&1 | tee version.log
+
+COPY version.sh /install/version.sh
+RUN sed -i 's/\r$//' /install/version.sh \
+ && chmod +x      /install/version.sh \
+ && /install/version.sh 2>&1 | tee version.log
 
 # Jupyter.
 EXPOSE 8888
