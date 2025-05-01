@@ -9,7 +9,6 @@ def fetch_price():
         res = requests.get(url)
         data = res.json()
 
-        # Safer check in case API rate limit or invalid response
         if 'bitcoin' in data and 'usd' in data['bitcoin']:
             price = data['bitcoin']['usd']
             time_now = datetime.utcnow().isoformat()
@@ -25,7 +24,7 @@ def fetch_price():
 
             print(f"[{time_now}] Bitcoin price: ${price}")
         else:
-            print("⚠️ Unexpected API response:", data)
+            print(" Unexpected API response:", data)
 
     except Exception as e:
         print("Something went wrong while fetching data:", e)
