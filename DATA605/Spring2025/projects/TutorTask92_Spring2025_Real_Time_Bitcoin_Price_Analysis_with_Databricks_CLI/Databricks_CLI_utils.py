@@ -204,7 +204,7 @@ def fetch_bitcoin_data(api_url: str = "https://api.coingecko.com/api/v3/simple/p
 
         if 'bitcoin' in data and 'usd' in data['bitcoin']:
             price = data['bitcoin']['usd']
-            time_now = datetime.utcnow().isoformat() + "Z"
+            time_now = datetime.utcnow().isoformat()
             record = {"timestamp": time_now, "price": price}
 
             os.makedirs(output_dir, exist_ok=True)
