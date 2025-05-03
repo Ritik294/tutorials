@@ -1,163 +1,176 @@
+Here’s a polished, template-aligned **README.md**. It keeps your original structure but:
+
+- Highlights the `.py` scripts as the canonical runners  
+- Clarifies that notebooks import only from `databricks_cli_utils.py`  
+- Streamlines wording into numbered sections  
+
+```markdown
 # Real-Time Bitcoin Price Analysis using Databricks CLI
 
 **Author**: Ritik Pratap Singh  
 **Date**: 2025-04-30  
-**Course**: DATA605 - Spring 2025
-
-## Project Overview
-
-This project implements a pipeline to fetch real-time Bitcoin price data from the CoinGecko API, perform time-series forecasting using an ARIMA model on Databricks compute, and orchestrate the entire workflow using the Databricks Command Line Interface (CLI).
-
-The primary demonstration uses a Jupyter notebook (`databricks_cli.example.ipynb`) running within a Docker container to manage the pipeline steps: creating a Databricks cluster, fetching data, uploading it to DBFS, submitting the analysis notebook as a run on the cluster, monitoring completion, downloading results, and cleaning up the cluster. An auxiliary notebook (`databricks_cli.API.ipynb`) demonstrates the core Databricks CLI commands through Python wrappers.
+**Course**: DATA605 — Spring 2025
 
 ---
 
-## Project Files
+## 1. Project Overview
 
-- `README.md`: This file.  
-- `databricks_cli_utils.py`: Helper functions for the Databricks CLI, data fetching, ARIMA modeling, and plotting.  
-- `databricks_cli.API.ipynb` & `databricks_cli.API.md`: Demo of CLI commands via Python wrappers.  
-- `databricks_cli.example.ipynb` & `databricks_cli.example.md`: Orchestrator for end-to-end pipeline.  
-- `bitcoin_analysis.ipynb`: (Upload to Databricks Workspace) Analysis notebook using Pandas & Statsmodels.  
+This project builds an automated pipeline to:
 
-### Directories & Scripts
+1. Fetch real-time Bitcoin prices from the CoinGecko API  
+2. Upload data to Databricks DBFS  
+3. Run a time-series forecast (ARIMA) on a Databricks cluster  
+4. Download forecast results and visualize them locally  
+5. Tear down cloud resources—all via the Databricks CLI
 
-- `config/`:  
-  - `cluster_config.json`: JSON spec for cluster creation.  
-  - `cluster_id.txt`: Generated cluster ID.  
-- `data/`: Local storage for fetched data and results.  
-- `output_plots/`: Local folder for saved visualizations.  
-- `scripts/`: Shell scripts for pipeline automation (`run_pipeline.sh`, etc.).  
-- `requirements.txt`: Python dependencies.  
-- `Dockerfile`: Docker image definition (DATA605 style).  
-- `docker_build.sh`, `docker_bash.sh`, `docker_jupyter.sh`, `docker_name.sh`: Docker helper scripts.  
+There are two primary entry points:
+
+- **`databricks_cli.API.py`** — demo of core CLI commands  
+- **`databricks_cli.example.py`** — end-to-end pipeline runner  
+
+For interactive, cell-by-cell exploration, see the companion notebooks.
 
 ---
 
-## Setup and Dependencies
+## 2. Project Files
 
-### Prerequisites
+```text
+databricks_cli_utils.py         # shared helpers for CLI, data fetch, modeling, plotting
+databricks_cli.API.py           # one-shot demo of all CLI wrappers
+databricks_cli.API.ipynb        # interactive API walkthrough
+databricks_cli.API.md           # markdown docs for API.py
 
-- **Git** to clone this repo.  
-- **Docker** Desktop/Engine installed and running.  
-- **Databricks workspace** (Azure, AWS, GCP).  
-- **Databricks PAT**: Personal Access Token from your User Settings.  
-- **Python 3.8+** on the host for initial CLI configuration.  
+databricks_cli.example.py       # one-shot pipeline runner (fetch→forecast→plot)
+databricks_cli.example.ipynb    # interactive pipeline walkthrough
+databricks_cli.example.md       # markdown docs for example.py
 
----
+bitcoin_analysis.ipynb          # analysis notebook to upload into Databricks workspace
 
-## Cloning the Repository
+config/
+  ├─ cluster_config.json        # cluster creation spec
+  └─ cluster_id.txt             # saved cluster ID after create
 
-```bash
-# Clone the main tutorials repo and navigate into the project folder
-git clone https://github.com/causify-ai/tutorials.git
-cd tutorials/DATA605/Spring2025/projects/TutorTask92_Spring2025_Real_Time_Bitcoin_Price_Analysis_with_Databricks_CLI
+data/
+  ├─ bitcoin_price.json         # appended price records
+  └─ forecast_output.csv        # downloaded forecast results
+
+output_plots/
+  ├─ historical.png             # local historical plot
+  └─ forecast.png               # local forecast plot
+
+scripts/                        # auxiliary shell scripts
+requirements.txt                # Python dependencies
+Dockerfile                      # image spec (DATA605 style)
+docker_build.sh                 # build image
+docker_bash.sh                  # start bash shell
+docker_jupyter.sh               # launch JupyterLab
+docker_name.sh                  # tagging helper
 ```
 
 ---
 
-## Building and Running the Docker Container (data605_style)
+## 3. Prerequisites & Setup
 
-### 1. Build the Docker Image
-
-```bash
-chmod +x docker_*.sh
-./docker_build.sh
-```
-> **Note:** Docker is run with `--rm` by default, so any CLI config you do _inside_ the container will be lost when you exit.
-
-### 2. Start an Interactive Bash Shell
-
-```bash
-# Mount your Databricks CLI config for persistence
-./docker_bash.sh --mount-config
-```
-- Your project is mounted at `/data` inside the container.  
-- Exit the shell to remove the container.
-
-### 3. Launch JupyterLab
-
-```bash
-./docker_jupyter.sh --mount-config
-```
-- Opens JupyterLab on port 8888.  
-- Access it at `http://localhost:8888/lab?token=...`.  
-- Use `Ctrl+C` in the terminal to stop.
-
-#### Env-var Shortcut (No Interactive Configuration)
-
-If you prefer not to mount `~/.databrickscfg`, pass your workspace and token as environment variables:
-
-```bash
-docker run --rm -it \
-  -e DATABRICKS_HOST="https://<your-workspace>.cloud.databricks.com" \
-  -e DATABRICKS_TOKEN="dapiXXXXXXXXXXXXXXXX" \
-  -v "$(pwd)":/data \
-  -p 8888:8888 \
-  umd_data605/bitcoin_cli_project \
-  bash --noprofile --norc
-```
-
-### 4. (Optional) Install Python Dependencies
-
-```bash
-# Inside the container shell at /data:
-pip3 install -r requirements.txt
-```
+1. **Clone the repo & navigate**  
+   ```bash
+   git clone https://github.com/causify-ai/tutorials.git
+   cd tutorials/DATA605/Spring2025/projects/TutorTask92_Spring2025_Real_Time_Bitcoin_Price_Analysis_with_Databricks_CLI
+   ```
+2. **Install Docker** (Desktop/Engine)  
+3. **Generate a Databricks PAT** from User Settings → Access Tokens  
+4. **(Local) Python 3.8+** for initial CLI configuration
 
 ---
 
-## Prepare Databricks Workspace
+## 4. Build & Run Docker (data605_style)
 
-1. Upload `bitcoin_analysis.ipynb` to your Databricks Workspace.  
-2. Copy its workspace path (e.g., `/Users/you@example.com/bitcoin_analysis`).  
-3. Set `ANALYSIS_NOTEBOOK_PATH` in `databricks_cli.example.ipynb`.  
-4. Ensure `config/cluster_config.json` is created and correct.
+1. **Build the image**  
+   ```bash
+   chmod +x docker_*.sh
+   ./docker_build.sh
+   ```
+2. **Start an interactive shell** (mounts your CLI config for persistence)  
+   ```bash
+   ./docker_bash.sh --mount-config
+   ```
+3. **Launch JupyterLab**  
+   ```bash
+   ./docker_jupyter.sh --mount-config
+   ```
+   - Visit `http://localhost:8888/lab?token=...`
 
-### Optional: Test Job for API Notebook
-
-Create a simple job in Databricks and update `JOB_ID` in `databricks_cli.API.ipynb`.
+> **Tip:** If you’d rather pass your host credentials as env-vars instead of mounting:
+> ```bash
+> docker run --rm -it \
+>   -e DATABRICKS_HOST="https://<workspace>.cloud.databricks.com" \
+>   -e DATABRICKS_TOKEN="dapiXXXX" \
+>   -v "$(pwd)":/data -p 8888:8888 \
+>   umd_data605/bitcoin_cli_project \
+>   bash
+> ```
 
 ---
 
-## Usage Guide
+## 5. Prepare Databricks Workspace
 
-### Interactive Notebook
+1. **Upload** `bitcoin_analysis.ipynb` into your workspace.  
+2. **Copy its path** (e.g. `/Users/you@example.com/bitcoin_analysis`).  
+3. **Set** `ANALYSIS_NOTEBOOK_PATH` in `databricks_cli.example.ipynb`.  
+4. **Verify** `config/cluster_config.json` matches your workspace’s available versions.
 
-1. `./docker_jupyter.sh --mount-config`  
-2. Open `databricks_cli.API.ipynb` or `databricks_cli.example.ipynb` in JupyterLab.  
-3. Run cells sequentially.
+---
 
-### Batch Notebook Execution
+## 6. Usage
+
+### 6.1 Run the API demo script  
+```bash
+python databricks_cli.API.py
+```  
+This will:
+
+- Create a cluster  
+- Check status  
+- Upload/download a test file  
+- Submit and poll a job run  
+- Delete the cluster  
+
+### 6.2 Run the full pipeline script  
+```bash
+python databricks_cli.example.py
+```  
+This executes the entire fetch→forecast→plot flow and writes visuals to `output_plots/`.
+
+### 6.3 Interactive Notebooks  
+Open in JupyterLab and **Restart & Run All**:
+
+- `databricks_cli.API.ipynb`  
+- `databricks_cli.example.ipynb`
+
+---
+
+## 7. Batch Execution
 
 ```bash
 docker run --rm -v "$(pwd)":/data umd_data605/bitcoin_cli_project \
   bash -c "cd /data && \
-    jupyter nbconvert --to notebook --execute databricks_cli.example.ipynb \
-                    --output Executed.ipynb"
+    jupyter nbconvert --to notebook --execute \
+      databricks_cli.example.ipynb \
+      --output executed_example.ipynb"
 ```
 
 ---
 
-### Alternative Pipeline Script
+## 8. Troubleshooting
 
-```bash
-./docker_bash.sh --mount-config
-./scripts/run_pipeline.sh
-```
-
----
-
-### Troubleshooting
-
-- **No `/data` directory**: Ensure you’re running in Bash (Git Bash/WSL), not PowerShell.  
-- **CLI commands fail**: Use `--mount-config` or the Env-var shortcut above.
+- **No `/data` dir**: Use Bash (Git Bash/WSL) not PowerShell.  
+- **CLI failures**: Ensure `--mount-config` or env-vars are set correctly.  
+- **Port conflicts**: Change `-p 8888:8888` in Docker run.
 
 ---
 
-## References
+## 9. References
 
-- [Databricks CLI Documentation](https://docs.databricks.com/en/dev-tools/cli/index.html)  
+- [Databricks CLI Docs](https://docs.databricks.com/en/dev-tools/cli/index.html)  
 - [CoinGecko API Docs](https://www.coingecko.com/en/api)  
 - [Statsmodels ARIMA Docs](https://www.statsmodels.org/stable/generated/statsmodels.tsa.arima.model.ARIMA.html)
-
+```

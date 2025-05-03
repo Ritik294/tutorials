@@ -1,61 +1,75 @@
 # Databricks CLI API Documentation
 
-## Introduction
+## Project Files
 
-The Databricks Command Line Interface (CLI) is a tool that allows you to automate and interact with your Databricks workspaces directly from your terminal or through scripts. It provides commands for managing resources like clusters, files in the Databricks File System (DBFS), jobs, and more, without needing to use the web UI.
+- **`databricks_cli_utils.py`**  
+  Core library of all wrapper functions around the Databricks CLI, data fetching, modeling, and plotting.
 
-This document provides an overview of the CLI, focusing on the commands relevant to the Bitcoin Price Analysis project, and describes the Python wrapper functions created in `databricks_cli_utils.py` to simplify its use. For interactive examples, please refer to the `databricks_cli.API.ipynb` notebook.
+- **`databricks_cli.API.py`**  
+  **Your canonical CLI-demo script.** Run this to exercise every helper in a single, repeatable batch.
+
+- **`databricks_cli.API.ipynb`**  
+  Interactive notebook that also imports from `databricks_cli_utils.py`—great for step-by-step exploration, but not needed for automated runs.
+
+- **`config/cluster_config.json`**  
+  Sample JSON for creating clusters via CLI.
+
+- **`config/cluster_id.txt`**  
+  File where cluster IDs are saved.
 
 ---
 
-## Prerequisites Setup
+## 1. Introduction
 
-### 1. Install and Configure Databricks CLI
+The Databricks Command Line Interface (CLI) provides a programmatic way to manage Databricks workspaces—clusters, file operations, jobs, runs—without using the web UI.  
+This document covers:
 
-**Installation**:  
-Follow the official instructions to install the Databricks CLI:
+1. Setting up the CLI  
+2. The key commands used in our Bitcoin-analysis project  
+3. How to call them from Python via `databricks_cli_utils.py`  
+4. A step-by-step demo in `databricks_cli.API.py` and its companion notebook  
+
+---
+
+## 2. Prerequisites & Setup
+
+### 2.1 Install the Databricks CLI
+
 ```bash
 pip install databricks-cli
-```
-Verify the installation:
-```bash
 databricks --version
 ```
 
-**Authentication (Configuration)**:  
-Generate a Personal Access Token (PAT):
+### 2.2 Authenticate
 
-- In your Databricks workspace UI:  
-  `User Settings → Access Tokens → Generate new token`  
-- Copy the token immediately.
+Generate a Personal Access Token (PAT) in your Databricks UI:
 
-Configure CLI via terminal:
+1. **User Settings → Access Tokens → Generate New Token**  
+2. Copy the token immediately.
+
+Configure via terminal:
+
 ```bash
 databricks configure --token
+# When prompted, enter:
+#   Databricks Host:   https://<your-workspace>.cloud.databricks.com
+#   Token:             <your-PAT>
 ```
-Provide:
 
-- **Databricks Host** (e.g. `https://adb-xxxxxxxx.xx.azuredatabricks.net`)
-- **Generated PAT**
+Alternatively, set environment variables:
 
-**Alternative via Environment Variables**:
 ```bash
-export DATABRICKS_HOST=...
-export DATABRICKS_TOKEN=...
+export DATABRICKS_HOST=https://<your-workspace>.cloud.databricks.com
+export DATABRICKS_TOKEN=<your-PAT>
 ```
 
 ---
 
-### 2. Create Cluster Configuration File (`config/cluster_config.json`)
+## 3. Cluster Configuration
 
-The `create_cluster_cli` function requires a JSON config:
+Place your cluster settings in `config/cluster_config.json`.  
+Example:
 
-**Steps**:
-
-1. Create a directory `config` (if not already).
-2. Inside it, create a file named `cluster_config.json`.
-
-**Example**:
 ```json
 {
   "cluster_name": "bitcoin-analysis-cluster",
@@ -71,103 +85,103 @@ The `create_cluster_cli` function requires a JSON config:
   }
 }
 ```
-Adjust `spark_version` and `node_type_id` based on what's available in your region.
 
 ---
 
-### 3. Create a Test Databricks Job (UI)
+## 4. Core Databricks CLI Commands
 
-A simple test job is needed for the API notebook.
+### 4.1 Clusters
 
-**Steps**:
+```bash
+databricks clusters create     --json-file config/cluster_config.json
+databricks clusters get        --cluster-id <cluster_id>
+databricks clusters list
+databricks clusters delete     --cluster-id <cluster_id>
+```
 
-1. Create a notebook in Databricks (e.g., `api_test_job_notebook`) with:
-   ```python
-   print("Test job ran")
-   ```
+### 4.2 File System (DBFS)
 
-2. In Databricks UI:
-   - Go to **Workflows → Create Job**
-   - Task name: `Run_Test_Notebook`
-   - Type: `Notebook`
-   - Source: `Workspace`
-   - Select your test notebook
-   - Cluster: Choose a **new job cluster** with small specs, auto-terminate after job
-   - Job name: `API Test Job`
-   - Click **Create**
+```bash
+databricks fs cp <local> <dbfs:/path>     # upload
+databricks fs cp <dbfs:/path> <local>     # download
+databricks fs ls <dbfs:/path>
+databricks fs mkdirs <dbfs:/path>
+databricks fs rm <dbfs:/path>
+```
 
-3. Note down the **Job ID** for later use.
+### 4.3 Jobs & Runs
 
----
-
-## Core Databricks CLI Commands
-
-### `databricks clusters`
-- `create --json-file <file>`
-- `get --cluster-id <id>`
-- `list`
-- `delete --cluster-id <id>`
-- `permanent-delete --cluster-id <id>`
-
-### `databricks fs`
-- `cp <local-path> <dbfs-path>`
-- `cp <dbfs-path> <local-path>`
-- `ls <dbfs-path>`
-- `mkdirs <dbfs-path>`
-- `rm <dbfs-path>`
-
-### `databricks jobs`
-- `create --json-file <file>`
-- `run-now --job-id <id>`
-- `list`
-
-### `databricks runs`
-- `submit --json '{...}'`
-- `get --run-id <id>`
-- `list --job-id <id>`
+```bash
+databricks jobs create       --json-file config/job_config.json
+databricks jobs run-now      --job-id <job_id>
+databricks runs submit       --json '{...}' 
+databricks runs get          --run-id <run_id>
+```
 
 ---
 
-## Python Wrappers (`databricks_cli_utils.py`)
+## 5. Python Wrappers (`databricks_cli_utils.py`)
 
-This module provides wrapper functions using `subprocess`.
+Each function uses `subprocess` under the hood and returns structured results:
 
-- `_run_databricks_cli(command_list)`  
-  → Executes CLI command and returns dict with output.
+- **`_run_databricks_cli(cmd_list: List[str]) → dict`**  
+  Executes a CLI command and captures JSON or raw output.
 
-- `create_cluster_cli(config_file, cluster_id_file)`  
-  → Runs cluster create command, stores and returns cluster ID.
+- **`create_cluster_cli(config_file, cluster_id_file) → str`**  
+  Creates a cluster, writes its ID to `cluster_id_file`, and returns it.
 
-- `get_cluster_status_cli(cluster_id)`  
-  → Returns cluster state (e.g. `RUNNING`).
+- **`get_cluster_status_cli(cluster_id: str) → str`**  
+  Returns the cluster’s current state (e.g. `RUNNING`, `TERMINATED`).
 
-- `upload_to_dbfs_cli(local_path, dbfs_path, overwrite)`  
-  → Uploads local file to DBFS.
+- **`upload_to_dbfs_cli(local_path, dbfs_path, overwrite=True) → bool`**  
+  Uploads a file to DBFS, optionally overwriting.
 
-- `download_from_dbfs_cli(dbfs_path, local_path, overwrite)`  
-  → Downloads from DBFS.
+- **`download_from_dbfs_cli(dbfs_path, local_path, overwrite=True) → bool`**  
+  Downloads a DBFS file locally.
 
-- `submit_notebook_job_cli(job_id)`  
-  → Triggers job run using Job ID.
+- **`submit_notebook_job_cli(job_id: str) → str`**  
+  Triggers a notebook job run and returns its run ID.
 
-- `get_job_run_status_cli(run_id)`  
-  → Gets job run status dict.
+- **`get_job_run_status_cli(run_id: str) → dict`**  
+  Retrieves job-run status details.
 
-- `delete_cluster_cli(cluster_id)`  
-  → Deletes the cluster.
-
-> 🔸 *Note: The module also includes data analysis functions specific to the Bitcoin project.*
+- **`delete_cluster_cli(cluster_id: str) → bool`**  
+  Deletes the named cluster (or warns if already gone).
 
 ---
 
-## References
+## 6. Demo Script: `databricks_cli.API.py`
 
-- **Databricks CLI Docs**:  
-  https://docs.databricks.com/en/dev-tools/cli/index.html
+**Why this matters**  
+The `.py` script is the _official_ way to run your API demo end-to-end—ideal for CI, automated testing, or simply “one command and done.”  
 
-- **Databricks REST API**:  
-  https://docs.databricks.com/en/dev-tools/api/latest/index.html
+The notebook is useful for interactive learning, but if you want deterministic, repeatable runs (e.g. in a shell script or scheduler), you’ll always call:
 
-- **Interactive Example Notebook**:  
+```bash
+python databricks_cli.API.py
+```
+
+It will:
+1. Create a cluster  
+2. Check its status  
+3. Upload/download a test file  
+4. Submit and poll a job run  
+5. Delete the cluster  
+
+All using the same functions that the notebook walks through. 
+
+For line-by-line interactive exploration, open `databricks_cli.API.ipynb`.
+
+---
+
+## 7. References
+
+- **Databricks CLI Documentation**  
+  https://docs.databricks.com/dev-tools/cli/index.html
+
+- **Databricks REST API**  
+  https://docs.databricks.com/dev-tools/api/latest/
+
+- **Interactive Demo Notebook**  
   `databricks_cli.API.ipynb`
 

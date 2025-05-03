@@ -1,5 +1,34 @@
 # databricks_cli_utils.py
 
+"""
+Utilities for real-time Bitcoin price analysis using the Databricks CLI.
+
+This module provides:
+- subprocess-based wrappers around the Databricks CLI
+- functions to fetch and parse Bitcoin price data
+- ARIMA modeling and forecast generation
+- plotting helpers for historical and forecast data
+"""
+
+__all__ = [
+    "_run_databricks_cli",
+    "create_cluster_cli",
+    "get_cluster_status_cli",
+    "upload_to_dbfs_cli",
+    "download_from_dbfs_cli",
+    "submit_notebook_job_cli",
+    "get_job_run_status_cli",
+    "delete_cluster_cli",
+    "fetch_bitcoin_data",
+    "parse_local_json_data",
+    "train_arima_model",
+    "get_forecast",
+    "plot_historical_data",
+    "plot_forecast_data",
+    "submit_notebook_run_cli",
+]
+
+
 import subprocess
 import json
 import os
@@ -21,7 +50,7 @@ if not logging.getLogger().hasHandlers():
 # === Databricks CLI Interaction ===
 
 def _run_databricks_cli(command_list: List[str]) -> Dict[str, Any]:
-    """Runs a Databricks CLI command."""
+    """Execute a Databricks CLI command and return a result dict."""
     _LOG.debug("Running Databricks CLI command: %s", shlex.join(command_list))
     result = {"success": False, "output": None, "raw_stdout": "", "stderr": "", "error": None}
     try:
@@ -58,7 +87,7 @@ def _run_databricks_cli(command_list: List[str]) -> Dict[str, Any]:
     return result
 
 def create_cluster_cli(config_file: str = "config/cluster_config.json", cluster_id_file: str = "config/cluster_id.txt") -> Optional[str]:
-    """Creates a Databricks cluster via CLI and saves the ID."""
+    """Create a Databricks cluster via CLI, save its ID, and return it."""
     if not os.path.exists(config_file):
         _LOG.error("Cluster config file not found: %s", config_file)
         return None
