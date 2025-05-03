@@ -77,6 +77,8 @@ docker_name.sh                  # tagging helper
 
 ## 4. Build & Run Docker (data605_style)
 
+**Note**: I have copied the `install_jupyter_extensions.sh` & `bashrc` from  `docker_common` into my local project folder. Also I have slightly modified docker- bash,build and Dockfile.
+
 1. **Build the image**  
    ```bash
    chmod +x docker_*.sh

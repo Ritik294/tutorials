@@ -2,9 +2,10 @@ import requests
 from datetime import datetime
 import json
 import os
+from config.settings import COINGECKO_PRICE_URL
 
 def fetch_price():
-    url = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd"
+    url = COINGECKO_PRICE_URL
     try:
         res = requests.get(url)
         data = res.json()

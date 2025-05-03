@@ -1,6 +1,8 @@
 #!/bin/bash
 set -euo pipefail
 
+# load our secrets & endpoints
+source "$(dirname "$0")/config/settings.sh"
 
 send_slack_alert() {
     local message="$1"
@@ -18,8 +20,8 @@ send_slack_alert() {
 JOB_ID=${1:-515902180597777} 
 MAX_CLUSTER_WAIT_SECONDS=300     
 MAX_JOB_WAIT_MINUTES=30          
-SLACK_WEBHOOK_URL="https://hooks.slack.com/services/YOUR/WEBHOOK"  
-WORKSPACE_URL="https://adb-166759757699610.10.azuredatabricks.net"
+echo "Posting to Slack via $SLACK_WEBHOOK_URL"
+echo "Databricks endpoint is $WORKSPACE_URL"
 LOG_DIR="logs"
 CLUSTER_ID_FILE="config/cluster_id.txt"
 

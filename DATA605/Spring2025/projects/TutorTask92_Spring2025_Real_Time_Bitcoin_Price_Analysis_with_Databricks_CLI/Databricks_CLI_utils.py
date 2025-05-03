@@ -42,6 +42,7 @@ import requests
 import pandas as pd
 from statsmodels.tsa.arima.model import ARIMA
 import matplotlib.pyplot as plt
+from config.settings import COINGECKO_PRICE_URL
 
 _LOG = logging.getLogger(__name__)
 if not logging.getLogger().hasHandlers():
@@ -221,7 +222,7 @@ def delete_cluster_cli(cluster_id: str) -> bool:
 
 # === Data Fetching ===
 
-def fetch_bitcoin_data(api_url: str = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd",
+def fetch_bitcoin_data(api_url: str = COINGECKO_PRICE_URL,
                        output_dir: str = "data",
                        output_filename: str = "bitcoin_price.json") -> Optional[str]:
     """Fetches Bitcoin price and appends to a local JSON file."""

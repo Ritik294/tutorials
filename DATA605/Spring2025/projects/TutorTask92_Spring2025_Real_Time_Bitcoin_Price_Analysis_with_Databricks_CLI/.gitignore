@@ -14,3 +14,7 @@ __pycache__/
 
 # Environment variables (if you add a .env file later)
 .env
+
+# API Key and Databricks URL
+/config/settings.sh
+/config/settings.py
