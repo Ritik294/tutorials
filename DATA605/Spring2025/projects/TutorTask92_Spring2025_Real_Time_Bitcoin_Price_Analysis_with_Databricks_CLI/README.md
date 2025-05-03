@@ -1,10 +1,3 @@
-Here’s a polished, template-aligned **README.md**. It keeps your original structure but:
-
-- Highlights the `.py` scripts as the canonical runners  
-- Clarifies that notebooks import only from `databricks_cli_utils.py`  
-- Streamlines wording into numbered sections  
-
-```markdown
 # Real-Time Bitcoin Price Analysis using Databricks CLI
 
 **Author**: Ritik Pratap Singh  
@@ -173,4 +166,3 @@ docker run --rm -v "$(pwd)":/data umd_data605/bitcoin_cli_project \
 - [Databricks CLI Docs](https://docs.databricks.com/en/dev-tools/cli/index.html)  
 - [CoinGecko API Docs](https://www.coingecko.com/en/api)  
 - [Statsmodels ARIMA Docs](https://www.statsmodels.org/stable/generated/statsmodels.tsa.arima.model.ARIMA.html)
-```
